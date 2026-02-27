@@ -1,5 +1,7 @@
 # Monolize
 
+***This is first AI Coding Project.***
+
 A CLI application to manage multiple git repositories. Built with Go, Cobra, and Viper.
 
 ## Features
