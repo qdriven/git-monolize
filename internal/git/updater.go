@@ -1,0 +1,57 @@
+package git
+
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+)
+
+// UpdateRepository updates a git repository to the latest version
+func UpdateRepository(repoPath string) error {
+	// Get current branch
+	branchCmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	branchCmd.Dir = repoPath
+	branch, err := branchCmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to get current branch: %w", err)
+	}
+	currentBranch := strings.TrimSpace(string(branch))
+	
+	// Fetch all updates
+	fetchCmd := exec.Command("git", "fetch", "--all")
+	fetchCmd.Dir = repoPath
+	fetchCmd.Stdout = os.Stdout
+	fetchCmd.Stderr = os.Stderr
+	if err := fetchCmd.Run(); err != nil {
+		return fmt.Errorf("failed to fetch: %w", err)
+	}
+	
+	// Pull the latest changes
+	pullCmd := exec.Command("git", "pull", "origin", currentBranch)
+	pullCmd.Dir = repoPath
+	pullCmd.Stdout = os.Stdout
+	pullCmd.Stderr = os.Stderr
+	if err := pullCmd.Run(); err != nil {
+		return fmt.Errorf("failed to pull: %w", err)
+	}
+	
+	return nil
+}
+
+// GetRemoteURL gets the remote URL of a git repository
+func GetRemoteURL(repoPath string) (string, error) {
+	cmd := exec.Command("git", "remote", "get-url", "origin")
+	cmd.Dir = repoPath
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to get remote URL: %w", err)
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+// GetRepoName gets the repository name from the path
+func GetRepoName(repoPath string) string {
+	return filepath.Base(repoPath)
+}
