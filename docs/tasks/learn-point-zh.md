@@ -80,7 +80,7 @@ func Load() (*Config, error) {
 
 ### 3. 依赖管理
 Go 使用 `go.mod` 跟踪依赖项。
-- **文件**: [go.mod](file:///d:/workspace/innate/use-cases/daily-use/git-monolize/go.mod)
+- **文件**: [go.mod](file:///Users/patrick/workspace/innate/git-monolize/go.mod)
 ```go
 module monolize
 
@@ -93,14 +93,22 @@ require (
 )
 ```
 
+**常用 Go Mod 命令**:
+- `go mod tidy`: 自动添加代码中使用的依赖，并删除未使用的依赖。
+- `go mod vendor`: 将所有依赖项复制到项目的 `vendor` 目录中。
+- `go get <package>`: 下载并安装指定的包或依赖。
+- `go list -m all`: 列出当前项目的所有依赖模块。
+
 ### 4. 关键 Go 语言特性
 
 - **基础语言特性 (类型/变量)**:
-  - 示例见 [root.go](file:///d:/workspace/innate/use-cases/daily-use/git-monolize/cmd/root.go#L11): `var cfgFile string`
-- **函数**:
-  - 示例见 [finder.go](file:///d:/workspace/innate/use-cases/daily-use/git-monolize/internal/git/finder.go#L11): `func FindRepositories(rootPath string) ([]string, error)`
+  - 示例见 [root.go](file:///Users/patrick/workspace/innate/git-monolize/cmd/root.go#L11): `var cfgFile string`
+- **函数 (Functions)**:
+  - Go 函数是一等公民，可以有多个返回值。
+  - 示例见 [finder.go](file:///Users/patrick/workspace/innate/git-monolize/internal/git/finder.go#L11): `func FindRepositories(rootPath string) ([]string, error)`
 - **结构体 (Structures)**:
-  - 示例见 [config.go](file:///d:/workspace/innate/use-cases/daily-use/git-monolize/internal/config/config.go#L8-L12):
+  - 用于封装数据。Go 没有类（Class），而是使用结构体。
+  - 示例见 [config.go](file:///Users/patrick/workspace/innate/git-monolize/internal/config/config.go#L8-L12):
     ```go
     type Config struct {
         Path          string `mapstructure:"path"`
@@ -108,8 +116,25 @@ require (
         AutoCommit    bool   `mapstructure:"auto_commit"`
     }
     ```
+- **接口 (Interfaces)**:
+  - 接口定义了一组方法签名。Go 中最常见的接口是 `error`。
+  - 示例见 [updater.go](file:///Users/patrick/workspace/innate/git-monolize/internal/git/updater.go#L12):
+    ```go
+    // UpdateRepository 返回 error 接口，调用者需处理可能发生的错误
+    func UpdateRepository(repoPath string) error {
+        // ...
+        if err != nil {
+            return fmt.Errorf("failed to get current branch: %w", err)
+        }
+        return nil
+    }
+    ```
+- **包调用 (Package Calls)**:
+  - 通过导入路径引用其他包，并调用其导出的（首字母大写）函数或类型。
+  - `main.go` 调用 `cmd` 包中的 `Execute()`。
+  - 示例见 [main.go](file:///Users/patrick/workspace/innate/git-monolize/main.go#L11): `cmd.Execute()`
 - **错误处理 (Error Handling)**:
-  - 示例见 [finder.go](file:///d:/workspace/innate/use-cases/daily-use/git-monolize/internal/git/finder.go#L23-L25):
+  - 示例见 [finder.go](file:///Users/patrick/workspace/innate/git-monolize/internal/git/finder.go#L22-L24):
     ```go
     entries, err := os.ReadDir(rootPath)
     if err != nil {
@@ -117,18 +142,15 @@ require (
     }
     ```
 - **For 循环**:
-  - 示例见 [finder.go](file:///d:/workspace/innate/use-cases/daily-use/git-monolize/internal/git/finder.go#L27):
+  - 示例见 [finder.go](file:///Users/patrick/workspace/innate/git-monolize/internal/git/finder.go#L27):
     ```go
     for _, entry := range entries {
         // ... 循环体 ...
     }
     ```
-- **跨包调用函数**:
-  - `main.go` 调用 `cmd` 包中的 `Execute()`。
-  - [main.go](file:///d:/workspace/innate/use-cases/daily-use/git-monolize/main.go#L11): `cmd.Execute()`
 - **init() 函数**:
   - 用于在 `main()` 或其他函数运行前进行初始化。
-  - 示例见 [root.go](file:///d:/workspace/innate/use-cases/daily-use/git-monolize/cmd/root.go#L29-L34):
+  - 示例见 [root.go](file:///Users/patrick/workspace/innate/git-monolize/cmd/root.go#L29-L34):
     ```go
     func init() {
         cobra.OnInitialize(initConfig)
