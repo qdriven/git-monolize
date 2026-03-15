@@ -3,6 +3,7 @@ package task
 import (
 	"fmt"
 	"io"
+	"monolize/internal/tui"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,9 +13,10 @@ type Manager struct {
 	TaskDir     string
 	GitHubOwner string
 	WorkDir     string
+	UI          *tui.UI
 }
 
-func NewManager(taskDir, owner, workDir string) *Manager {
+func NewManager(taskDir, owner, workDir string, useTUI bool) *Manager {
 	if workDir == "" {
 		workDir = "."
 	}
@@ -22,6 +24,7 @@ func NewManager(taskDir, owner, workDir string) *Manager {
 		TaskDir:     taskDir,
 		GitHubOwner: owner,
 		WorkDir:     workDir,
+		UI:          tui.New(useTUI),
 	}
 }
 
@@ -49,24 +52,33 @@ func (m *Manager) Dispatch(taskName string, destPath string) error {
 		destPath = taskSubDir
 	}
 
-	fmt.Printf("Copying task from %s to %s\n", srcPath, destPath)
-	if err := copyDirectory(srcPath, destPath); err != nil {
+	err := m.UI.Spinner("Copying task files", func() error {
+		return copyDirectory(srcPath, destPath)
+	})
+	if err != nil {
 		return fmt.Errorf("failed to copy task: %w", err)
 	}
+	m.UI.Printf("  From: %s\n", srcPath)
+	m.UI.Printf("  To:   %s\n", destPath)
 
-	fmt.Println("Initializing git repository...")
-	if err := initGitRepo(destPath); err != nil {
+	err = m.UI.Spinner("Initializing git repository", func() error {
+		return initGitRepo(destPath, m.UI)
+	})
+	if err != nil {
 		return fmt.Errorf("failed to initialize git: %w", err)
 	}
 
-	fmt.Printf("Creating GitHub repository %s/%s...\n", m.GitHubOwner, taskName)
-	if err := createGitHubRepo(destPath, m.GitHubOwner, taskName); err != nil {
+	repoFullName := fmt.Sprintf("%s/%s", m.GitHubOwner, taskName)
+	err = m.UI.Spinner(fmt.Sprintf("Creating GitHub repository %s", repoFullName), func() error {
+		return createGitHubRepo(destPath, m.GitHubOwner, taskName, m.UI)
+	})
+	if err != nil {
 		return fmt.Errorf("failed to create GitHub repository: %w", err)
 	}
 
-	fmt.Printf("\nTask dispatched successfully!\n")
-	fmt.Printf("Location: %s\n", destPath)
-	fmt.Printf("GitHub: https://github.com/%s/%s\n", m.GitHubOwner, taskName)
+	m.UI.Success("Task dispatched successfully!")
+	m.UI.Printf("  Location: %s\n", destPath)
+	m.UI.Printf("  GitHub:   https://github.com/%s/%s\n", m.GitHubOwner, taskName)
 
 	return nil
 }
@@ -87,13 +99,17 @@ func (m *Manager) SyncBack(taskName string, workPath string) error {
 		return fmt.Errorf("task working directory not found: %s", taskInWork)
 	}
 
-	fmt.Printf("Syncing task from %s to %s\n", taskInWork, destPath)
-	if err := copyDirectory(taskInWork, destPath); err != nil {
+	err := m.UI.Spinner("Syncing task files", func() error {
+		return copyDirectory(taskInWork, destPath)
+	})
+	if err != nil {
 		return fmt.Errorf("failed to sync task: %w", err)
 	}
+	m.UI.Printf("  From: %s\n", taskInWork)
+	m.UI.Printf("  To:   %s\n", destPath)
 
-	fmt.Printf("\nTask synced successfully!\n")
-	fmt.Printf("Location: %s\n", destPath)
+	m.UI.Success("Task synced successfully!")
+	m.UI.Printf("  Location: %s\n", destPath)
 
 	return nil
 }
@@ -150,7 +166,7 @@ func copyFile(src, dst string) error {
 	return err
 }
 
-func initGitRepo(path string) error {
+func initGitRepo(path string, ui *tui.UI) error {
 	cmd := exec.Command("git", "init")
 	cmd.Dir = path
 	cmd.Stdout = os.Stdout
@@ -174,7 +190,7 @@ func initGitRepo(path string) error {
 	return cmd.Run()
 }
 
-func createGitHubRepo(path, owner, name string) error {
+func createGitHubRepo(path, owner, name string, ui *tui.UI) error {
 	cmd := exec.Command("gh", "repo", "create", fmt.Sprintf("%s/%s", owner, name),
 		"--public",
 		"--source=.",
