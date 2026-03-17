@@ -16,7 +16,7 @@ func SyncSubmodules(monoRepoPath string) error {
 	if err := fetchCmd.Run(); err != nil {
 		return fmt.Errorf("failed to fetch submodules: %w", err)
 	}
-	
+
 	// Update all submodules to the latest commit on their tracking branch
 	updateCmd := exec.Command("git", "submodule", "update", "--remote", "--merge")
 	updateCmd.Dir = monoRepoPath
@@ -25,7 +25,7 @@ func SyncSubmodules(monoRepoPath string) error {
 	if err := updateCmd.Run(); err != nil {
 		return fmt.Errorf("failed to update submodules: %w", err)
 	}
-	
+
 	// Check if there are changes to commit
 	statusCmd := exec.Command("git", "status", "--porcelain")
 	statusCmd.Dir = monoRepoPath
@@ -33,7 +33,7 @@ func SyncSubmodules(monoRepoPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to check status: %w", err)
 	}
-	
+
 	if len(output) > 0 {
 		// There are changes, commit them
 		addCmd := exec.Command("git", "add", ".")
@@ -41,7 +41,7 @@ func SyncSubmodules(monoRepoPath string) error {
 		if err := addCmd.Run(); err != nil {
 			return fmt.Errorf("failed to add changes: %w", err)
 		}
-		
+
 		commitCmd := exec.Command("git", "commit", "-m", "Update submodules to latest versions")
 		commitCmd.Dir = monoRepoPath
 		commitCmd.Stdout = os.Stdout
@@ -49,10 +49,10 @@ func SyncSubmodules(monoRepoPath string) error {
 		if err := commitCmd.Run(); err != nil {
 			return fmt.Errorf("failed to commit changes: %w", err)
 		}
-		
+
 		fmt.Println("Changes committed to mono repo")
 	}
-	
+
 	return nil
 }
 

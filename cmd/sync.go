@@ -14,13 +14,13 @@ var syncCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		monoRepoPath := args[0]
-		
+
 		fmt.Printf("Syncing all submodules in: %s\n", monoRepoPath)
-		
+
 		if err := mono.SyncSubmodules(monoRepoPath); err != nil {
 			return fmt.Errorf("failed to sync submodules: %w", err)
 		}
-		
+
 		fmt.Println("All submodules synced successfully!")
 		return nil
 	},

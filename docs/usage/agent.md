@@ -125,6 +125,67 @@ monolize agent edit claude-code --tui
 |------|----------|------|
 | `--tui` | `edit` | 启用交互式终端 UI |
 
+## Profile 配置模板管理
+
+除了全局配置，`agent` 命令还支持 **Profile (配置模板)** 管理。这允许你在不同的项目中使用不同的 Agent 配置（例如在项目 A 中使用 Claude Opus，在项目 B 中使用 GLM-4）。
+
+### `agent profile list`
+
+列出所有已创建的配置模板。
+
+```bash
+monolize agent profile list
+```
+
+### `agent profile add`
+
+创建一个新的配置模板。
+
+```bash
+monolize agent profile add <name> --type <agent-type>
+```
+
+**示例**:
+
+```bash
+# 创建一个名为 my-glm 的模板，类型为 glm
+monolize agent profile add my-glm --type glm
+
+# 创建一个名为 claude-opus 的模板，类型为 claude-code
+monolize agent profile add claude-opus --type claude-code
+```
+
+### `agent profile edit`
+
+编辑配置模板的内容。
+
+```bash
+monolize agent profile edit <name> [config-index]
+```
+
+### `agent use`
+
+将指定的配置模板应用到当前项目。这会将模板中的配置文件复制到当前项目目录下。
+
+```bash
+monolize agent use <profile-name> [--project <path>]
+```
+
+**示例**:
+
+```bash
+cd my-project
+monolize agent use my-glm
+```
+
+### `agent current`
+
+查看当前项目正在使用的配置模板。
+
+```bash
+monolize agent current [--project <path>]
+```
+
 ## 完整示例
 
 ### 查看所有 Agent 状态
@@ -141,6 +202,26 @@ monolize agent view claude-code
 
 # 编辑配置
 monolize agent edit claude-code --tui
+```
+
+### 在不同项目中使用不同模型
+
+```bash
+# 1. 创建两个配置模板
+monolize agent profile add my-claude --type claude-code
+monolize agent profile add my-glm --type glm
+
+# 2. 分别编辑它们的配置
+monolize agent profile edit my-claude
+monolize agent profile edit my-glm
+
+# 3. 在项目 A 中使用 Claude
+cd ~/workspace/project-a
+monolize agent use my-claude
+
+# 4. 在项目 B 中使用 GLM
+cd ~/workspace/project-b
+monolize agent use my-glm
 ```
 
 ### 配置新的 AI Agent

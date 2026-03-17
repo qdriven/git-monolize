@@ -18,7 +18,7 @@ func UpdateRepository(repoPath string) error {
 		return fmt.Errorf("failed to get current branch: %w", err)
 	}
 	currentBranch := strings.TrimSpace(string(branch))
-	
+
 	// Fetch all updates
 	fetchCmd := exec.Command("git", "fetch", "--all")
 	fetchCmd.Dir = repoPath
@@ -27,7 +27,7 @@ func UpdateRepository(repoPath string) error {
 	if err := fetchCmd.Run(); err != nil {
 		return fmt.Errorf("failed to fetch: %w", err)
 	}
-	
+
 	// Pull the latest changes
 	pullCmd := exec.Command("git", "pull", "origin", currentBranch)
 	pullCmd.Dir = repoPath
@@ -36,7 +36,7 @@ func UpdateRepository(repoPath string) error {
 	if err := pullCmd.Run(); err != nil {
 		return fmt.Errorf("failed to pull: %w", err)
 	}
-	
+
 	return nil
 }
 

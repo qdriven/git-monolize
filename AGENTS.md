@@ -130,6 +130,13 @@ monolize agent list                    # 列出所有支持的 Agent
 monolize agent view claude-code        # 查看配置
 monolize agent edit kimi               # 编辑配置
 monolize agent edit claude-code --tui  # TUI 模式选择配置文件
+
+# Profile 配置模板管理
+monolize agent profile list                    # 列出所有配置模板
+monolize agent profile add my-glm --type glm   # 创建一个 GLM 模板
+monolize agent profile edit my-glm             # 编辑模板配置
+monolize agent use my-glm                      # 将模板应用到当前项目
+monolize agent current                         # 查看当前项目使用的模板
 ```
 
 详细文档: [docs/usage/agent.md](docs/usage/agent.md)

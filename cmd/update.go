@@ -14,7 +14,7 @@ var updateCmd = &cobra.Command{
 	Long:  `Scan the specified directory for git repositories and update each one to the latest version.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		paths := viper.GetStringSlice("path")
-		
+
 		var allRepos []string
 		for _, path := range paths {
 			fmt.Printf("Scanning for git repositories in: %s\n", path)
@@ -25,12 +25,12 @@ var updateCmd = &cobra.Command{
 			}
 			allRepos = append(allRepos, repos...)
 		}
-		
+
 		if len(allRepos) == 0 {
 			fmt.Println("No git repositories found.")
 			return nil
 		}
-		
+
 		// Remove duplicates
 		repoMap := make(map[string]bool)
 		var uniqueRepos []string
@@ -40,9 +40,9 @@ var updateCmd = &cobra.Command{
 				uniqueRepos = append(uniqueRepos, repo)
 			}
 		}
-		
+
 		fmt.Printf("Found %d unique repository(s)\n\n", len(uniqueRepos))
-		
+
 		for _, repo := range uniqueRepos {
 			fmt.Printf("Updating: %s\n", repo)
 			if err := git.UpdateRepository(repo); err != nil {
@@ -52,7 +52,7 @@ var updateCmd = &cobra.Command{
 			}
 			fmt.Println()
 		}
-		
+
 		return nil
 	},
 }
