@@ -5,11 +5,11 @@
 ## 概述
 
 `task` 命令用于管理开发任务的工作流程：
-1. **Dispatch**: 将任务从任务目录复制到工作目录，初始化 Git 仓库并创建 GitHub 远程仓库
-2. **Sync**: 将工作目录中的任务实现同步回原始任务目录
+1. **Dispatch**: 将任务目录中的所有 Markdown 文件复制到工作目录，初始化 Git 仓库并创建 GitHub 远程仓库
+2. **Sync**: 将工作目录中的所有 Markdown 文件同步回原始任务目录
 3. **List**: 列出任务目录中的所有任务
 
-支持交互式终端 UI (TUI) 模式，提供更友好的操作体验。
+**注意**: `dispatch` 和 `sync` 命令只会复制 `.md` (Markdown) 文件，其他类型的文件会被忽略。
 
 ## 使用方法
 
@@ -95,7 +95,7 @@ monolize task dispatch --tui \
 
 **工作流程**:
 
-1. **复制任务文件**: 将任务从任务目录复制到工作目录
+1. **复制 Markdown 文件**: 将任务目录中的所有 `.md` 文件复制到工作目录（保持目录结构）
 2. **初始化 Git**: 在工作目录中初始化 Git 仓库
 3. **创建 GitHub 仓库**: 使用 `gh repo create` 创建远程仓库
 4. **推送代码**: 将代码推送到 GitHub
@@ -103,7 +103,7 @@ monolize task dispatch --tui \
 **输出示例**:
 
 ```
-Copying task files...
+Copying markdown files...
   From: /Users/you/tasks/my-task
   To:   /Users/you/workspace/my-task
 
@@ -156,13 +156,13 @@ monolize task sync --tui \
 **工作流程**:
 
 1. **查找工作目录**: 在工作目录中查找任务实现
-2. **复制回任务目录**: 将实现复制回原始任务目录
+2. **复制 Markdown 文件**: 将工作目录中的所有 `.md` 文件复制回原始任务目录（保持目录结构）
 
 **输出示例**:
 
 ```
-Syncing task files...
-  From: /Users/you/workspace/my-task/task
+Syncing markdown files...
+  From: /Users/you/workspace/my-task
   To:   /Users/you/tasks/my-task
 
 Task synced successfully!
@@ -176,26 +176,30 @@ Task synced successfully!
 ```
 tasks/
 ├── feature-auth/        # 任务文件夹
-│   ├── README.md
-│   └── specs.md
+│   ├── README.md       # 任务说明（会被 dispatch）
+│   ├── specs.md        # 规格文档（会被 dispatch）
+│   └── notes.txt       # 其他文件（会被忽略）
 ├── feature-payment/
 │   └── ...
 └── bugfix-login/
     └── ...
 ```
 
-### 工作目录
+### 工作目录（Dispatch 后）
 
 ```
 workspace/
 ├── feature-auth/        # 分发后的任务
 │   ├── .git/           # Git 仓库
-│   ├── task/           # 任务文件（复制自任务目录）
-│   │   ├── README.md
-│   │   └── specs.md
-│   └── src/            # 你的实现
+│   ├── README.md       # 从任务目录复制的 Markdown 文件
+│   └── specs.md        # 从任务目录复制的 Markdown 文件
 └── ...
 ```
+
+**说明**:
+- `dispatch` 命令只会复制 `.md` 文件到工作目录
+- `sync` 命令只会同步 `.md` 文件回任务目录
+- 其他类型的文件（如 `.txt`, `.json` 等）不会被处理
 
 ## TUI 模式
 

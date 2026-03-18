@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type Manager struct {
@@ -42,21 +43,13 @@ func (m *Manager) Dispatch(taskName string, destPath string) error {
 		if err := os.MkdirAll(destPath, 0755); err != nil {
 			return fmt.Errorf("failed to create destination directory: %w", err)
 		}
-	} else {
-		taskSubDir := filepath.Join(destPath, "task")
-		if _, err := os.Stat(taskSubDir); os.IsNotExist(err) {
-			if err := os.MkdirAll(taskSubDir, 0755); err != nil {
-				return fmt.Errorf("failed to create task subdirectory: %w", err)
-			}
-		}
-		destPath = taskSubDir
 	}
 
-	err := m.UI.Spinner("Copying task files", func() error {
-		return copyDirectory(srcPath, destPath)
+	err := m.UI.Spinner("Copying markdown files", func() error {
+		return CopyMarkdownFiles(srcPath, destPath)
 	})
 	if err != nil {
-		return fmt.Errorf("failed to copy task: %w", err)
+		return fmt.Errorf("failed to copy markdown files: %w", err)
 	}
 	m.UI.Printf("  From: %s\n", srcPath)
 	m.UI.Printf("  To:   %s\n", destPath)
@@ -88,24 +81,19 @@ func (m *Manager) SyncBack(taskName string, workPath string) error {
 		workPath = filepath.Join(m.WorkDir, taskName)
 	}
 
-	taskInWork := filepath.Join(workPath, "task")
-	if _, err := os.Stat(taskInWork); os.IsNotExist(err) {
-		taskInWork = workPath
-	}
-
 	destPath := filepath.Join(m.TaskDir, taskName)
 
-	if _, err := os.Stat(taskInWork); os.IsNotExist(err) {
-		return fmt.Errorf("task working directory not found: %s", taskInWork)
+	if _, err := os.Stat(workPath); os.IsNotExist(err) {
+		return fmt.Errorf("task working directory not found: %s", workPath)
 	}
 
-	err := m.UI.Spinner("Syncing task files", func() error {
-		return copyDirectory(taskInWork, destPath)
+	err := m.UI.Spinner("Syncing markdown files", func() error {
+		return CopyMarkdownFiles(workPath, destPath)
 	})
 	if err != nil {
-		return fmt.Errorf("failed to sync task: %w", err)
+		return fmt.Errorf("failed to sync markdown files: %w", err)
 	}
-	m.UI.Printf("  From: %s\n", taskInWork)
+	m.UI.Printf("  From: %s\n", workPath)
 	m.UI.Printf("  To:   %s\n", destPath)
 
 	m.UI.Success("Task synced successfully!")
@@ -143,6 +131,35 @@ func copyDirectory(src, dst string) error {
 
 		if info.IsDir() {
 			return os.MkdirAll(dstPath, info.Mode())
+		}
+
+		return copyFile(path, dstPath)
+	})
+}
+
+func CopyMarkdownFiles(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		if !strings.HasSuffix(strings.ToLower(info.Name()), ".md") {
+			return nil
+		}
+
+		relPath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		dstPath := filepath.Join(dst, relPath)
+
+		dstDir := filepath.Dir(dstPath)
+		if err := os.MkdirAll(dstDir, 0755); err != nil {
+			return err
 		}
 
 		return copyFile(path, dstPath)
